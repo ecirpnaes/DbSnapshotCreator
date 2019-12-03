@@ -1,0 +1,62 @@
+{
+    "name": "azure-db-snapshot-creator",
+    "displayName": "Database Snapshot Creator",
+    "description": "Creates snapshots",
+    "version": "0.0.1",
+    "publisher": "seanprice",
+    "repository": "https://github.com/ecirpnaes/SnapshotCreator.git",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.40.0",
+        "azdata": "*"
+    },
+    "categories": [
+        "Other"
+    ],    
+    "main": "./out/extension",
+    "activationEvents": [
+        "onCommand:extension.snapshotDb",
+        "onCommand:extension.revertSnapshot"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.snapshotDb",
+                "title": "Create snapshot of this database"
+            },
+            {
+                "command": "extension.revertSnapshot",
+                "title": "Revert database from snapshot"
+            }
+        ],
+        "menus": {
+            "objectExplorer/item/context": [
+                {
+                    "command": "extension.snapshotDb",
+                    "when": "connectionProvider == MSSQL && nodeType && nodeType == Database && nodeLabel=~^((?!Snapshot).)*$",
+                    "group": "NONE"
+                },
+                {
+                    "command": "extension.revertSnapshot",
+                    "when": "connectionProvider == MSSQL && nodeType && nodeType == Database && nodeLabel=~/Snapshot/",
+                    "group": "NONE"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install && node ./node_modules/azdata/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test",
+        "proposedapi": "node installTypings.js"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6",
+        "azdata": "1.0.0",
+        "@types/node": "^7.0.43",
+        "@types/mocha": "^2.2.42"
+    }
+}
