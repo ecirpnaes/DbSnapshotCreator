@@ -33,7 +33,7 @@
             "objectExplorer/item/context": [
                 {
                     "command": "extension.snapshotDb",
-                    "when": "connectionProvider == MSSQL && nodeType && nodeType == Database && nodeLabel=~^((?!Snapshot).)*$",
+                    "when": "connectionProvider == MSSQL && nodeType && nodeType == Database && nodeLabel=~/^((?!Snapshot).)*$/gm",
                     "group": "NONE"
                 },
                 {
