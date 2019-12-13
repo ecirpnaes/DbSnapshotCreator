@@ -1,62 +1,77 @@
 {
-    "name": "azure-db-snapshot-creator",
-    "displayName": "Database Snapshot Creator",
-    "description": "Creates snapshots",
-    "version": "0.0.1",
-    "publisher": "seanprice",
-    "repository": "https://github.com/ecirpnaes/SnapshotCreator.git",
-    "license": "MIT",
-    "engines": {
-        "vscode": "^1.40.0",
-        "azdata": "*"
-    },
-    "categories": [
-        "Other"
-    ],    
-    "main": "./out/extension",
-    "activationEvents": [
-        "onCommand:extension.snapshotDb",
-        "onCommand:extension.revertSnapshot"
+  "name": "azure-db-snapshot-creator",
+  "displayName": "Database Snapshot Creator",
+  "description": "Creates snapshots",
+  "version": "0.0.1",
+  "publisher": "seanprice",
+  "repository": "https://github.com/ecirpnaes/SnapshotCreator.git",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.40.0",
+    "azdata": "*"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "Script",
+    "Snapshot"
+  ],
+  "main": "./out/extension",
+  "activationEvents": [
+    "onCommand:extension.snapshotDb",
+    "onCommand:extension.revertSnapshot"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.snapshotDb",
+        "title": "Create snapshot of this database"
+      },
+      {
+        "command": "extension.revertSnapshot",
+        "title": "Revert database from snapshot"
+      }
     ],
-    "contributes": {
-        "commands": [
-            {
-                "command": "extension.snapshotDb",
-                "title": "Create snapshot of this database"
-            },
-            {
-                "command": "extension.revertSnapshot",
-                "title": "Revert database from snapshot"
-            }
-        ],
-        "menus": {
-            "objectExplorer/item/context": [
-                {
-                    "command": "extension.snapshotDb",
-                    "when": "connectionProvider == MSSQL && nodeType && nodeType == Database && nodeLabel=~/^((?!Snapshot).)*$/gm",
-                    "group": "NONE"
-                },
-                {
-                    "command": "extension.revertSnapshot",
-                    "when": "connectionProvider == MSSQL && nodeType && nodeType == Database && nodeLabel=~/Snapshot/",
-                    "group": "NONE"
-                }
-            ]
+    "menus": {
+      "objectExplorer/item/context": [
+        {
+          "command": "extension.snapshotDb",
+          "when": "connectionProvider == MSSQL && nodeType && nodeType == Database && nodeLabel=~/^((?!Snapshot).)*$/gm",
+          "group": "NONE"
+        },
+        {
+          "command": "extension.revertSnapshot",
+          "when": "connectionProvider == MSSQL && nodeType && nodeType == Database && nodeLabel=~/Snapshot/",
+          "group": "NONE"
         }
+      ]
     },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install && node ./node_modules/azdata/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test",
-        "proposedapi": "node installTypings.js"
-    },
-    "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "azdata": "1.0.0",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
+    "configuration": {
+      "type": "object",
+      "title": "Snapshot Creator",
+      "properties": {
+        "snapshotCreator.scriptOnly": {
+          "type": "boolean",
+          "default": true,
+          "description": "If this is checked, the snapshot extension will only create the SQL commands necessary to create or revert a snapshot. If you want the extension to actually execute the commands against the database, then leave this unchecked."
+        }
+      }
     }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install && node ./node_modules/azdata/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test",
+    "proposedapi": "node installTypings.js"
+  },
+  "devDependencies": {
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.6",
+    "azdata": "1.0.0",
+    "@types/node": "^7.0.43",
+    "@types/mocha": "^2.2.42"
+  }
 }
