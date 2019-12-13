@@ -19,9 +19,9 @@ This extension contributes the following settings:
 * If the database node is a database (and not a database snapshot), you have the option to create a snapshot.
 * If the database node is a database snapshot, you will have the option to revert the source database from the snapshot.
 
-![Feature](/images/createRevertExec.gif)
+![Feature](https://raw.githubusercontent.com/ecirpnaes/DbSnapshotCreator/images/createRevertExec.gif)
 
-![Feature](/images/createRevertScript.gif)
+![Feature](https://raw.githubusercontent.com/ecirpnaes/DbSnapshotCreator/images/createRevertScript.gif)
 
 ## Known Issues
 
