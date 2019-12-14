@@ -2,6 +2,15 @@
 
 Provides a quick and easy way to create a snapshot of a database. The action can be executed directly against the server or scripted to a new SQL window so you can run it yourself.
 
+## FAQ
+
+* What's a database snapshot?
+  * _It's best to read the [Microsoft docs](https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-snapshots-sql-server), but the short answer is that a database snapshot is a static, `read-only` copy of a source database that gives you a consistent view of a database as of a certain point in time. You can recover the source database to the point when the snapshot was created from a database snapshot._
+* Can I choose my own naming convention for my database snapshots?
+  * _Yes, you can. Configure the extension to just script the necessary SQL statements to create the snapshot. You can then change the name (and file location) if desired. Refer to the animated gif below._
+* Can I choose my own naming convention for my database snapshots?
+  * _Yes, you can. Configure the extension to just script the necessary SQL statements to create the snapshot. You can then change the name (and file location) if desired. Refer to the animated gif below._
+
 ## Installation
 
 The current release is available to [download as a .vsix file](https://github.com/ecirpnaes/DbSnapshotCreator/releases/download/0.1.2/db-snapshot-creator-0.1.0.vsix) and can be installed by opening the File Menu and selecting `Install Extension from VSIX Package`
