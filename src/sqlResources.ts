@@ -1,9 +1,4 @@
 export const getCreateSnapshotSql = (sourceDb: string, scriptOnly: number) => `
-/********************************************************************************
- -- Script based on article at
- -- https://www.sqlservercentral.com/scripts/create-database-snapshot-dynamically
- *********************************************************************************/
- 
  use master;
  set nocount on;
  BEGIN TRY
@@ -17,46 +12,46 @@ export const getCreateSnapshotSql = (sourceDb: string, scriptOnly: number) => `
  declare @snapDbName varchar(200);
  declare @appendSql varchar(200); 
 
-  -- create a unique name for the snapshot
+ -- create a unique name for the snapshot
  declare @counter int = 1;
  select @appendSql = @tempAppendSql + '_0' + convert(varchar, @counter);
  select @snapDbName = @sourceDb + @appendSql;
-
  while exists (select * from sys.databases dbs where dbs.[name] = @snapDbName )
-    begin    
-		select @counter = @counter + 1;
-        declare @snapCounter varchar(5) = convert(varchar(5), @counter);        
-        if (len(@snapCounter) < 2) select @snapCounter = '0' + @snapCounter;
-        select @appendSql = @tempAppendSql + '_' + @snapCounter;
-        select @snapDbName = @sourceDb + @appendSql;        
-    end;
- 
+     begin    
+         select @counter = @counter + 1;
+         declare @snapCounter varchar(5) = convert(varchar(5), @counter);        
+         if (len(@snapCounter) < 2) select @snapCounter = '0' + @snapCounter;
+         select @appendSql = @tempAppendSql + '_' + @snapCounter;
+         select @snapDbName = @sourceDb + @appendSql;        
+     end;
+
+ -- Script to get filename(s) based on
+ -- https://www.sqlservercentral.com/scripts/create-database-snapshot-dynamically
  select @fileSql = @fileSql +
      case when @fileSql <> '' then + ',' else '' end 
-     -- Remove file extension .mdf, .ndf
-     +  	'( NAME = [' + smf.[name] + '], FILENAME = ''' + isnull(@filePath, left(smf.physical_name, len(smf.physical_name)- 4 )) + @appendSql + '.ss'')'		
+     + '(NAME = [' + smf.[name] + '],' + char(10) +  'FILENAME = ''' + isnull(@filePath, left(smf.[physical_name], len(smf.[physical_name])- 4 )) + @appendSql + '.ss'')'		
  from sys.master_files as smf
- join sys.databases as sdb on sdb.database_id = smf.database_id
- where sdb.[state] = 0 -- online databases.
- and smf.[type] = 0 -- data files.
- and sdb.[name] = @sourceDb;
+ join sys.databases as sdb on sdb.[database_id] = smf.[database_id]
+     where sdb.[state] = 0 -- online databases.
+     and smf.[type] = 0 -- data files.
+     and sdb.[name] = @sourceDb;
  
- select @execSql = 'CREATE DATABASE [' + @snapDbName + '] ON ' + @fileSql + ' AS SNAPSHOT OF [' + @sourceDb + '];'
- 
+ select @execSql = 'CREATE DATABASE [' + @snapDbName + '] ON ' + char(10) + @fileSql + char(10) + ' AS SNAPSHOT OF [' + @sourceDb + '];'
+ --print @execSql;
  if (@scriptOnly = 1) -- just return the sql
-	begin	
-		select 'success',  @execSql;
-	end
- else -- otherwise, exec the sql
-	begin		
-		exec sp_executesql @execSql;
-		select 'success',  @snapDbName;
-	end
- 
- END TRY
-     BEGIN CATCH
-         select 'error', ERROR_MESSAGE();
-     END CATCH
+     begin	
+         select 'success',  @execSql;
+     end
+ else 
+     begin		
+         exec sp_executesql @execSql;
+         select 'success',  @snapDbName;
+     end
+
+END TRY
+  BEGIN CATCH
+      select 'error', ERROR_MESSAGE();
+  END CATCH
 `;
 
 export const getRevertSnapshotSql = (snapshotName: string, scriptOnly: number) => `
@@ -77,53 +72,46 @@ declare @snapshotName varchar(400) = '${snapshotName}';
     end; 
 
 select @sourceDb = db.[name], @sourceDbId = db.database_id
-from sys.databases db
-join sys.databases snaps
-on db.database_id = snaps.source_database_id
-where snaps.[database_id] is not NULL
-and snaps.[name] = @snapshotName;
+    from sys.databases db
+    join sys.databases snaps on db.database_id = snaps.source_database_id
+    where snaps.[database_id] is not NULL
+    and snaps.[name] = @snapshotName;
 
-declare @tbl table (rowId int, dropSql varchar(2000));
-insert @tbl
+-- create a table to hold the statements we need to execute
+declare @tblSql table (rowId int, sqlString varchar(2000));
+
+-- create any 'drop database' statements needed
+insert @tblSql
 	select ROW_NUMBER() over(order by snaps.[name]), 'use master; drop database [' + snaps.[name] + '];'
-	from sys.databases snaps
-	where snaps.[source_database_id] = @sourceDbId
-	and snaps.[name] <> @snapshotName;
+        from sys.databases snaps
+        where snaps.[source_database_id] = @sourceDbId
+        and snaps.[name] <> @snapshotName;
 
-declare @rowCount int = (select count(*) from @tbl);
-declare @rowCounter int = 1;
-declare @dropSql nvarchar(4000) = '';
+-- insert alter database and restore statements
+declare @rowCount int = (select count(*) from @tblSql);
+insert @tblSql
+    select  @rowCount + 1, 'use master; alter database [' + @sourceDb + '] set single_user with rollback immediate;' union
+    select  @rowCount + 2, 'use master; alter database [' + @sourceDb + '] set multi_user;' union
+    select  @rowCount + 3, 'use master; restore database [' + @sourceDb + '] from database_snapshot = ''' + @snapshotName + ''';'
 
-if (@scriptOnly = 0) -- if only scripting, no need to run the queries
-    begin
-        while (@rowCounter <= @rowCount)
-            begin
-                select @dropSql = t.dropSql 
-                    from @tbl t 
-                    where t.rowId = @rowCounter;
-                exec sp_executesql @dropSql;
-                select @rowCounter = @rowCounter + 1;
-            end
-    end;
-
-declare @setSingleSql nvarchar(2000) = 'use master; alter database [' + @sourceDb + '] set single_user with rollback immediate;';
-declare @setMultiSql nvarchar(2000) = 'use master; alter database [' + @sourceDb + '] set multi_user;';
-declare @restoreDbSql nvarchar(2000) = 'use master; restore database [' + @sourceDb + '] from database_snapshot = ''' + @snapshotName + ''';';
-
-if (@scriptOnly = 0) -- exec sql
-    begin
-        exec sp_executesql @setSingleSql;
-        exec sp_executesql @setMultiSql;
-        exec sp_executesql @restoreDbSql;
-        select 'success',  @snapshotName;
-    end
+if (@scriptOnly = 1) -- return the scripts
+    select 'success', t.[sqlString] from @tblSql t
 else
     begin
-        select 'success', t.dropSql from @tbl t union all
-        select 'success', @setSingleSql union all
-        select 'success', @setMultiSql union all
-        select 'success', @restoreDbSql;       
+        select @rowCount = count(*) from @tblSql;
+        declare @rowCounter int = 1;
+        declare @sql nvarchar(4000) = '';
+        while (@rowCounter <= @rowCount)
+            begin
+                select @sql = t.sqlString 
+                    from @tblSql t 
+                    where t.rowId = @rowCounter;
+                exec sp_executesql @sql;
+                select @rowCounter = @rowCounter + 1;
+            end
+        select 'success',  @snapshotName;
     end;
+
 END TRY
      BEGIN CATCH
          select 'error',  ERROR_MESSAGE();
