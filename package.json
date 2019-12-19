@@ -2,7 +2,7 @@
   "name": "azure-db-snapshot-creator",
   "displayName": "Database Snapshot Creator",
   "description": "Creates snapshots",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "seanprice",
   "repository": "https://github.com/ecirpnaes/SnapshotCreator.git",
   "license": "MIT",
