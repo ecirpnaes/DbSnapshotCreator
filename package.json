@@ -1,5 +1,5 @@
 {
-  "name": "azure-db-snapshot-creator",
+  "name": "db-snapshot-creator",
   "displayName": "Database Snapshot Creator",
   "description": "Creates snapshots",
   "version": "0.1.0",
