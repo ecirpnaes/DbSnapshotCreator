@@ -7,7 +7,7 @@
   "repository": "https://github.com/ecirpnaes/SnapshotCreator.git",
   "license": "MIT",
   "engines": {
-    "vscode": "^1.40.0",
+    "vscode": "^1.28.0",
     "azdata": "*"
   },
   "categories": [
