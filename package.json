@@ -75,6 +75,6 @@
     "@types/mocha": "^2.2.42"
   },
   "dependencies": {
-    "diff": "^4.0.1"
+    "diff": "^8.0.3"
   }
 }
